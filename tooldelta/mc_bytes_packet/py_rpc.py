@@ -35,7 +35,5 @@ class PyRpc(BaseBytesPacket):
             if (b & 0x80) == 0:
                 break
             shift += 7
-        msgpack_bytes = reader.read(length)
-        self.Value = msgpack.unpackb(msgpack_bytes, raw=False, strict_map_key=False)
-        operation_type_bytes = bs[-4:]
-        self.OperationType = struct.unpack("<I", operation_type_bytes)[0]
+        self.Value = msgpack.unpackb(reader.read(length), raw=False, strict_map_key=False)
+        self.OperationType = struct.unpack("<I", reader.read(4))[0]
