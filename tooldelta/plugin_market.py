@@ -322,7 +322,9 @@ class PluginMarket:
     # 从插件市场获取单个整合包数据
     def get_package_data_from_market(self, name: str) -> PluginsPackage:
         target_data_url = url_join(self.plugin_market_content_url, name, "datas.json")
-        content = requests.get(target_data_url).json()
+        resp = requests.get(target_data_url)
+        resp.raise_for_status()
+        content = resp.json()
         return PluginsPackage(name, content)
 
     def skim_plugin(
@@ -425,9 +427,9 @@ class PluginMarket:
 
     def download_plugin_package(self, pack: PluginsPackage):
         fmts.clean_print("§6获取插件数据中...", end="\r")
-        find_plugins = thread_gather(
-            [(self.get_plugin_data_from_market, (i,)) for i in pack.plugin_ids]
-        )
+        find_plugins = thread_gather([
+            (self.get_plugin_data_from_market, (i,)) for i in pack.plugin_ids
+        ])
         ftree = self.get_market_filetree()
         dirdata = ftree.get(pack.name)
         if dirdata is None:
@@ -516,16 +518,14 @@ class PluginMarket:
                         f"未知插件类型：{this_plugin_info.plugin_type}, 你可能需要通知 ToolDelta 项目开发组解决"
                     )
             for filepath in plugin_filepaths_dict[plugin_name]:
-                plugin_remote_to_local_path.append(
-                    (
-                        url_join(
-                            self.plugin_market_content_url,
-                            this_plugin_info.name,
-                            filepath,
-                        ),
-                        this_plugin_info.dir / filepath,
-                    )
-                )
+                plugin_remote_to_local_path.append((
+                    url_join(
+                        self.plugin_market_content_url,
+                        this_plugin_info.name,
+                        filepath,
+                    ),
+                    this_plugin_info.dir / filepath,
+                ))
         fmts.clean_print(
             f"§bTD下载管理器: §7需要下载 §c{len(plugin_remote_to_local_path)} §7个文件"
         )
