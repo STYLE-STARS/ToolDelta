@@ -6,6 +6,9 @@ from tooldelta.constants.packets import PacketIDS
 from tooldelta.mc_bytes_packet.base_bytes_packet import BaseBytesPacket
 from typing import Any
 
+PYRPC_OP_SEND = 0x05DB23AE
+PYRPC_OP_RECV = 0x0094D408
+
 
 @dataclass
 class PyRpc(BaseBytesPacket):
@@ -22,18 +25,17 @@ class PyRpc(BaseBytesPacket):
         return PacketIDS.IDPyRpc
 
     def encode(self) -> bytes:
-        raise NotImplementedError("Encode packet.PyRpc is not support")
+        writer = BytesIO()
+        packed_value = msgpack.packb(self.Value, use_bin_type=True)
+        writer.write(struct.pack("<I", len(packed_value)))  # type: ignore
+        writer.write(packed_value)  # type: ignore
+        writer.write(struct.pack("<I", self.OperationType))
+        return writer.getvalue()
 
     def decode(self, bs: bytes):
         reader = BytesIO(bs)
-        length = 0
-        shift = 0
-        # 处理PyRpc的Value字段开头的VarInt
-        while True:
-            b = reader.read(1)[0]
-            length |= (b & 0x7F) << shift
-            if (b & 0x80) == 0:
-                break
-            shift += 7
-        self.Value = msgpack.unpackb(reader.read(length), raw=False, strict_map_key=False)
+        length = struct.unpack("<I", reader.read(4))[0]
+        self.Value = msgpack.unpackb(
+            reader.read(length), raw=False, strict_map_key=False
+        )
         self.OperationType = struct.unpack("<I", reader.read(4))[0]
