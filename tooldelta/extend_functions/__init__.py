@@ -33,4 +33,4 @@ def activate_functions():
 
 
 def import_functions():
-    from . import gamerule_warnings
+    from . import gamerule_warnings, fast_plugin_download
