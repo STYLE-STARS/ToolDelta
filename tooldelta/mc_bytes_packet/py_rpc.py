@@ -26,8 +26,8 @@ class PyRpc(BaseBytesPacket):
 
     def encode(self) -> bytes:
         writer = BytesIO()
-        packed_value = msgpack.packb(self.Value, use_bin_type=True)
-        writer.write(struct.pack("<I", len(packed_value)))  # type: ignore
+        payload = msgpack.packb(self.Value, use_bin_type=True)
+        writer.write(struct.pack("<I", len(payload)))  # type: ignore
         writer.write(packed_value)  # type: ignore
         writer.write(struct.pack("<I", self.OperationType))
         return writer.getvalue()
