@@ -28,7 +28,7 @@ class PyRpc(BaseBytesPacket):
         writer = BytesIO()
         payload = msgpack.packb(self.Value, use_bin_type=True)
         writer.write(struct.pack("<I", len(payload)))  # type: ignore
-        writer.write(packed_value)  # type: ignore
+        writer.write(payload)  # type: ignore
         writer.write(struct.pack("<I", self.OperationType))
         return writer.getvalue()
 
